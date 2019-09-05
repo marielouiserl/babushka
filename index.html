@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Visalle</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        img {
+            max-width: 100%;
+        }
+
+        body {
+            background-color: rgb(108, 40, 40);
+            font-family: sans-serif;
+        }
+
+        nav {
+            width: 100vw;
+            text-align: center;
+        }
+
+        #templateModtager {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            max-width: 1000px;
+            margin: 0 auto;
+            grid-gap: 10px;
+        }
+
+        .container {
+            border: 1px solid #666;
+            padding: 10px;
+            background-color: antiquewhite;
+            margin: 5px;
+
+        }
+
+
+        h1 {
+            font-size: 20px;
+        }
+
+        #popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            width: 30%;
+            height: 100%;
+            background-color: white;
+            border: 1px solid black;
+
+
+
+        }
+
+
+
+
+        .enkeltRet {
+            width: 30vw;
+            height: 80vh;
+
+            text-align: center;
+
+
+        }
+
+        .lukpopup {
+            right: 0;
+            font-size: 30px;
+        }
+
+        @media screen and (max-width:700px) {
+            .templateModtager {
+                max-width: 100%;
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media screen and (max-width:500px) {
+            .templateModtager {
+                max-width: 100%;
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <button class="filter" data-kategori="alle">Alle</button>
+        <button class="filter" data-kategori="forreter">Forretter</button>
+        <button class="filter" data-kategori="hovedretter">Hovedretter</button>
+        <button class="filter" data-kategori="sideorders">Sideorders</button>
+        <button class="filter" data-kategori="desserter">Desserter</button>
+        <button class="filter" data-kategori="drikkevarer">Drikkevarer</button>
+    </nav>
+
+
+    <div id="templateModtager"></div>
+
+    <template id="menuTemplate">
+        <div id="popup">
+            <button class="lukpopup">X</button>
+            <section class="indhold">
+
+                <article class="enkeltRet">
+                    <h1></h1>
+                    <img class="billede" src="">
+                    <p></p>
+                </article>
+
+
+
+
+            </section>
+        </div>
+
+
+
+        <article class="container">
+
+
+            <h1 class="navn"></h1>
+            <img class="foto" src="">
+
+
+            <p class="kortbeskrivelse"></p>
+
+            <div>Pris: <span class="pris"></span> kr.</div>
+
+        </article>
+
+
+
+
+
+
+    </template>
+    <section id="liste"></section>
+    <script>
+        let alleRetter;
+        const dest = document.querySelector("#templateModtager");
+        const temp = document.querySelector("#menuTemplate");
+        let filter = "alle";
+
+        document.addEventListener("DOMContentLoaded", getJson);
+
+
+        async function getJson() {
+            let jsonData = await fetch("https://spreadsheets.google.com/feeds/list/17Dd7DvkPaFamNUdUKlrFgnH6POvBJXac7qyiS6zNRw0/od6/public/values?alt=json");
+
+            console.log("jsonData", jsonData);
+
+            alleRetter = await jsonData.json();
+            console.log("alleRetter", alleRetter);
+            visRetter();
+
+
+
+
+        }
+
+
+
+
+        function visRetter() {
+            dest.innerHTML = "";
+            alleRetter.feed.entry.forEach(ret => {
+                if (filter == "alle" || filter == ret.gsx$kategori.$t) {
+
+                    const klon = temp.cloneNode(true).content;
+                    klon.querySelector(".navn").textContent = ret.gsx$navn.$t;
+                    klon.querySelector(".foto").src = "imgs/small/" + ret.gsx$billede.$t + "-sm.jpg";
+                    klon.querySelector(".enkeltRet p").textContent = ret.gsx$kort.$t;
+                    klon.querySelector(".pris").textContent = ret.gsx$pris.$t;
+                    dest.appendChild(klon);
+
+                    dest.lastElementChild.addEventListener("click", () => {
+                        visSingle(ret)
+
+
+
+                    });
+
+                    addEventListenertoButtons();
+
+                }
+            })
+        }
+
+
+        function addEventListenertoButtons() {
+            document.querySelectorAll(".filter").forEach(elm => {
+                elm.addEventListener("click", filtrering);
+            })
+            console.log("klik knap", addEventListenertoButtons);
+        }
+
+        function filtrering() {
+            filter = this.dataset.kategori;
+            visRetter();
+            console.log("filtrering sker", filtrering);
+        }
+
+
+        function visSingle(ret) {
+            document.querySelector("#popup").style.display = "block";
+            document.querySelector("#popup .lukpopup").addEventListener("click", lukSingle);
+
+            document.querySelector(".enkeltRet h1").textContent = ret.gsx$navn.$t;
+            document.querySelector(".enkeltRet .billede").src = "imgs/small/" + ret.gsx$billede.$t + "-sm.jpg";
+            document.querySelector(".enkeltRet p").textContent = ret.gsx$lang.$t;
+        }
+
+        function lukSingle() {
+            document.querySelector("#popup").style.display = "none";
+        }
+    </script>
+</body></html>
